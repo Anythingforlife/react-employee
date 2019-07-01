@@ -1,21 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { Form, Label, FormGroup, Input, FormText, Button } from 'reactstrap';
+import { Link, Redirect } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
+import { authenticationService } from '../_services/authneticationService';
 export default class LoginComponent extends React.Component {
+
   state = {
     credentials: {
-      email: '',
+      email: 'om@g.com',
       password: ''
-    }
+    },
+    redirectToHome: false
   }
 
   constructor(props) {
     super(props);
+    // const [count, setCount] = useState(0);
   }
 
   render() {
+    // const [count, setCount] = useState(0);
+    if (this.state.redirectToHome === true) {
+      return <Redirect to='/' />
+    }
+
     return (
       <div className="jumbotron">
         <div className="container">
@@ -29,7 +40,11 @@ export default class LoginComponent extends React.Component {
                   password: Yup.string().required('Password is required')
                 })}
                 onSubmit={values => {
-                  console.log(values);
+                  authenticationService.login(values).then(response => {
+                    this.setState({ redirectToHome: true });
+                  }, error => {
+                    toast.error(error.message);
+                  });
                 }}
                 render={({
                   touched,
@@ -38,12 +53,14 @@ export default class LoginComponent extends React.Component {
                   handleChange,
                   handleBlur,
                   handleSubmit,
-                  dirty,
+                  isValid,
                 }) => (
                     <Form onSubmit={handleSubmit}>
                       <FormGroup>
                         <Label>Email*</Label>
                         <Input
+                          invalid={touched.email && errors.email != null}
+                          valid={touched.email && errors.email == null}
                           id="email"
                           type="text"
                           placeholder="Email"
@@ -57,6 +74,8 @@ export default class LoginComponent extends React.Component {
                       <FormGroup>
                         <Label>Password*</Label>
                         <Input
+                          invalid={touched.password && errors.password != null}
+                          valid={touched.password && errors.password == null}
                           id="password"
                           type="password"
                           placeholder="Password"
@@ -66,7 +85,8 @@ export default class LoginComponent extends React.Component {
                         />
                         {touched.password && <FormText color="danger">{errors.password}</FormText>}
                       </FormGroup>
-                      <Button color="primary" type="submit" disabled={!dirty || Object.keys(errors).length > 0}>Submit</Button>
+                      <Button color="primary" type="submit" disabled={!isValid}>Submit</Button>
+                      <Link to="/register" className="ml-2">New user</Link>
                     </Form>
 
                   )}
